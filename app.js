@@ -22,8 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const selectTipoVivienda = document.getElementById('tipo-vivienda');
   const selectCCAA = document.getElementById('select-ccaa');
+  const contenedorItpReducido = document.getElementById('contenedor-itp-reducido');
   const checkItpReducido = document.getElementById('check-itp-reducido');
   const badgeTipoImpuesto = document.getElementById('badge-tipo-impuesto');
+  const contenedorObraNuevaInfo = document.getElementById('contenedor-obra-nueva-info');
+  const textoObraNuevaInfo = document.getElementById('texto-obra-nueva-info');
+  const badgeObraNuevaImpuesto = document.getElementById('badge-obra-nueva-impuesto');
 
   const btnToggleDesgloseGastos = document.getElementById('btn-toggle-desglose-gastos');
   const panelDesgloseGastos = document.getElementById('panel-desglose-gastos');
@@ -45,25 +49,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tipos impositivos por CCAA en España (ITP general, ITP reducido y IAJD compraventa)
   const CCAA_IMPUESTOS = {
-    andalucia: { itp: 7.0, itpReducido: 3.5, iajd: 1.2 },
-    aragon: { itp: 8.0, itpReducido: 5.0, iajd: 1.5 },
-    asturias: { itp: 8.0, itpReducido: 3.0, iajd: 1.2 },
-    baleares: { itp: 8.0, itpReducido: 4.0, iajd: 1.5 },
-    canarias: { itp: 6.5, itpReducido: 4.0, iajd: 1.0 },
-    cantabria: { itp: 10.0, itpReducido: 5.0, iajd: 1.5 },
-    castilla_mancha: { itp: 9.0, itpReducido: 5.0, iajd: 1.5 },
-    castilla_leon: { itp: 8.0, itpReducido: 4.0, iajd: 1.5 },
-    cataluna: { itp: 10.0, itpReducido: 5.0, iajd: 1.5 },
-    ceuta_melilla: { itp: 6.0, itpReducido: 3.0, iajd: 0.5 },
-    valencia: { itp: 10.0, itpReducido: 6.0, iajd: 1.5 },
-    extremadura: { itp: 8.0, itpReducido: 7.0, iajd: 1.5 },
-    galicia: { itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
-    madrid: { itp: 6.0, itpReducido: 4.0, iajd: 0.75 },
-    murcia: { itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
-    navarra: { itp: 6.0, itpReducido: 5.0, iajd: 0.5 },
-    pais_vasco: { itp: 4.0, itpReducido: 2.5, iajd: 0.5 },
-    la_rioja: { itp: 7.0, itpReducido: 5.0, iajd: 1.0 }
+    andalucia: { nombre: 'Andalucía', itp: 7.0, itpReducido: 3.5, iajd: 1.2 },
+    aragon: { nombre: 'Aragón', itp: 8.0, itpReducido: 5.0, iajd: 1.5 },
+    asturias: { nombre: 'Asturias', itp: 8.0, itpReducido: 3.0, iajd: 1.2 },
+    baleares: { nombre: 'Baleares', itp: 8.0, itpReducido: 4.0, iajd: 1.5 },
+    canarias: { nombre: 'Canarias', itp: 6.5, itpReducido: 4.0, iajd: 1.0, igic: 6.5 },
+    cantabria: { nombre: 'Cantabria', itp: 10.0, itpReducido: 5.0, iajd: 1.5 },
+    castilla_mancha: { nombre: 'Castilla-La Mancha', itp: 9.0, itpReducido: 5.0, iajd: 1.5 },
+    castilla_leon: { nombre: 'Castilla y León', itp: 8.0, itpReducido: 4.0, iajd: 1.5 },
+    cataluna: { nombre: 'Cataluña', itp: 10.0, itpReducido: 5.0, iajd: 1.5 },
+    ceuta_melilla: { nombre: 'Ceuta y Melilla', itp: 6.0, itpReducido: 3.0, iajd: 0.5 },
+    valencia: { nombre: 'Comunidad Valenciana', itp: 10.0, itpReducido: 6.0, iajd: 1.5 },
+    extremadura: { nombre: 'Extremadura', itp: 8.0, itpReducido: 7.0, iajd: 1.5 },
+    galicia: { nombre: 'Galicia', itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
+    madrid: { nombre: 'Madrid', itp: 6.0, itpReducido: 4.0, iajd: 0.75 },
+    murcia: { nombre: 'Murcia', itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
+    navarra: { nombre: 'Navarra', itp: 6.0, itpReducido: 5.0, iajd: 0.5 },
+    pais_vasco: { nombre: 'País Vasco', itp: 4.0, itpReducido: 2.5, iajd: 0.5 },
+    la_rioja: { nombre: 'La Rioja', itp: 7.0, itpReducido: 5.0, iajd: 1.0 }
   };
+
+  // Actualiza dinámicamente las etiquetas del desplegable CCAA según el tipo de vivienda
+  function actualizarOpcionesCCAA(tipoViv) {
+    if (!selectCCAA) return;
+    const valorSeleccionado = selectCCAA.value;
+    Array.from(selectCCAA.options).forEach(opt => {
+      const data = CCAA_IMPUESTOS[opt.value];
+      if (data) {
+        if (tipoViv === 'segunda_mano') {
+          const itpStr = data.itp.toString().replace('.', ',');
+          opt.textContent = `${data.nombre} (ITP: ${itpStr}%)`;
+        } else {
+          const iajdStr = data.iajd.toString().replace('.', ',');
+          const igicTxt = data.igic ? ` · IGIC: ${data.igic.toString().replace('.', ',')}%` : '';
+          opt.textContent = `${data.nombre} (IAJD: ${iajdStr}%${igicTxt})`;
+        }
+      }
+    });
+    selectCCAA.value = valorSeleccionado;
+  }
 
   // Elementos de entrada del préstamo
   const inputCapital = document.getElementById('capital');
@@ -232,20 +256,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const esReducido = checkItpReducido?.checked || false;
     const ccaaInfo = CCAA_IMPUESTOS[ccaaKey] || CCAA_IMPUESTOS.madrid;
 
-    // 1. Porcentaje de impuesto aplicable
+    // Actualizar dinámicamente las etiquetas del desplegable CCAA según tipo de vivienda
+    actualizarOpcionesCCAA(tipoViv);
+
+    // 1. Porcentaje de impuesto aplicable y visibilidad de opciones
     let pctImpuesto = 0;
     let nombreImpuesto = '';
     if (tipoViv === 'segunda_mano') {
+      // Mostrar fila de ITP reducido y ocultar aviso de obra nueva
+      if (contenedorItpReducido) contenedorItpReducido.classList.remove('hidden');
+      if (contenedorObraNuevaInfo) contenedorObraNuevaInfo.classList.add('hidden');
+
+      const esReducido = checkItpReducido?.checked || false;
       pctImpuesto = esReducido ? ccaaInfo.itpReducido : ccaaInfo.itp;
-      nombreImpuesto = `ITP (${pctImpuesto.toFixed(1).replace('.0', '')}%)`;
+      const pctStr = pctImpuesto.toFixed(1).replace('.0', '').replace('.', ',');
+      nombreImpuesto = esReducido ? `ITP Reducido (${pctStr}%)` : `ITP (${pctStr}%)`;
+
+      if (badgeTipoImpuesto) badgeTipoImpuesto.textContent = `ITP ${pctStr}%`;
     } else {
-      const pctIva = ccaaKey === 'canarias' ? 6.5 : 10.0;
+      // Obra Nueva: NO aplica ITP. Ocultar la opción de ITP por completo
+      if (contenedorItpReducido) contenedorItpReducido.classList.add('hidden');
+      if (contenedorObraNuevaInfo) contenedorObraNuevaInfo.classList.remove('hidden');
+
+      const esCanarias = ccaaKey === 'canarias';
+      const pctIva = esCanarias ? 6.5 : 10.0;
+      const nombreIva = esCanarias ? 'IGIC' : 'IVA';
       const pctIajd = ccaaInfo.iajd;
       pctImpuesto = pctIva + pctIajd;
-      nombreImpuesto = `IVA ${pctIva}% + IAJD ${pctIajd}%`;
+
+      const pctTotalStr = pctImpuesto.toFixed(2).replace('.00', '').replace('.', ',');
+      const pctIvaStr = pctIva.toString().replace('.', ',');
+      const iajdStr = pctIajd.toString().replace('.', ',');
+      nombreImpuesto = `${nombreIva} + IAJD (${pctTotalStr}%)`;
+
+      if (textoObraNuevaInfo) {
+        textoObraNuevaInfo.innerHTML = `En obra nueva <strong>no aplica ITP</strong> (tributa ${nombreIva} ${pctIvaStr}% + IAJD ${iajdStr}%)`;
+      }
+      if (badgeObraNuevaImpuesto) {
+        badgeObraNuevaImpuesto.textContent = `${pctTotalStr}%`;
+      }
     }
 
-    if (badgeTipoImpuesto) badgeTipoImpuesto.textContent = nombreImpuesto;
     if (lblTipoImpuestoCaja) lblTipoImpuestoCaja.textContent = nombreImpuesto;
 
     // 2. Gastos arancelarios y tasación (auto-cálculo si no están editados a mano)
@@ -1183,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (inputPctFinanciacion?.value) params.set('ltv', inputPctFinanciacion.value);
       if (selectTipoVivienda?.value) params.set('viv', selectTipoVivienda.value);
       if (selectCCAA?.value) params.set('ccaa', selectCCAA.value);
-      if (checkItpReducido?.checked) params.set('red', '1');
+      if (selectTipoVivienda?.value === 'segunda_mano' && checkItpReducido?.checked) params.set('red', '1');
     } else {
       if (inputCapital?.value) params.set('capital', inputCapital.value);
     }

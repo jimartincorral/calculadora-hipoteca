@@ -191,35 +191,44 @@
                     Comunidad Autónoma
                   </label>
                   <select id="select-ccaa" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs font-medium">
-                    <option value="andalucia">Andalucía (7% ITP · 1,2% IAJD)</option>
-                    <option value="aragon">Aragón (8% ITP · 1,5% IAJD)</option>
-                    <option value="asturias">Asturias (8% ITP · 1,2% IAJD)</option>
-                    <option value="baleares">Baleares (8% ITP · 1,5% IAJD)</option>
-                    <option value="canarias">Canarias (6,5% IGIC · 1,0% IAJD)</option>
-                    <option value="cantabria">Cantabria (10% ITP · 1,5% IAJD)</option>
-                    <option value="castilla_mancha">Castilla-La Mancha (9% ITP · 1,5% IAJD)</option>
-                    <option value="castilla_leon">Castilla y León (8% ITP · 1,5% IAJD)</option>
-                    <option value="cataluna">Cataluña (10% ITP · 1,5% IAJD)</option>
-                    <option value="ceuta_melilla">Ceuta y Melilla (6% ITP · 0,5% IAJD)</option>
-                    <option value="valencia">Comunidad Valenciana (10% ITP · 1,5% IAJD)</option>
-                    <option value="extremadura">Extremadura (8% ITP · 1,5% IAJD)</option>
-                    <option value="galicia">Galicia (8% ITP · 1,5% IAJD)</option>
-                    <option value="madrid" selected>Madrid (6% ITP · 0,75% IAJD)</option>
-                    <option value="murcia">Murcia (8% ITP · 1,5% IAJD)</option>
-                    <option value="navarra">Navarra (6% ITP · 0,5% IAJD)</option>
-                    <option value="pais_vasco">País Vasco (4% ITP · 0,5% IAJD)</option>
-                    <option value="la_rioja">La Rioja (7% ITP · 1,0% IAJD)</option>
+                    <option value="andalucia">Andalucía (ITP: 7%)</option>
+                    <option value="aragon">Aragón (ITP: 8%)</option>
+                    <option value="asturias">Asturias (ITP: 8%)</option>
+                    <option value="baleares">Baleares (ITP: 8%)</option>
+                    <option value="canarias">Canarias (ITP: 6,5%)</option>
+                    <option value="cantabria">Cantabria (ITP: 10%)</option>
+                    <option value="castilla_mancha">Castilla-La Mancha (ITP: 9%)</option>
+                    <option value="castilla_leon">Castilla y León (ITP: 8%)</option>
+                    <option value="cataluna">Cataluña (ITP: 10%)</option>
+                    <option value="ceuta_melilla">Ceuta y Melilla (ITP: 6%)</option>
+                    <option value="valencia">Comunidad Valenciana (ITP: 10%)</option>
+                    <option value="extremadura">Extremadura (ITP: 8%)</option>
+                    <option value="galicia">Galicia (ITP: 8%)</option>
+                    <option value="madrid" selected>Madrid (ITP: 6%)</option>
+                    <option value="murcia">Murcia (ITP: 8%)</option>
+                    <option value="navarra">Navarra (ITP: 6%)</option>
+                    <option value="pais_vasco">País Vasco (ITP: 4%)</option>
+                    <option value="la_rioja">La Rioja (ITP: 7%)</option>
                   </select>
                 </div>
               </div>
 
-              <!-- Checkbox tipo reducido de impuesto -->
-              <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700">
+              <!-- Fila tipo reducido de ITP (Solo en Segunda Mano) -->
+              <div id="contenedor-itp-reducido" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700">
                 <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
                   <input type="checkbox" id="check-itp-reducido" class="rounded text-indigo-600 focus:ring-indigo-500">
-                  <span>Tipo reducido (< 32-35 años, familia numerosa o VPO)</span>
+                  <span>Tipo reducido de ITP (&lt; 32-35 años, familia numerosa o VPO)</span>
                 </label>
                 <span id="badge-tipo-impuesto" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">ITP 6%</span>
+              </div>
+
+              <!-- Fila informativa Obra Nueva (Sin ITP, tributa por IVA + IAJD) -->
+              <div id="contenedor-obra-nueva-info" class="hidden flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 text-xs">
+                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                  <i data-lucide="info" class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0"></i>
+                  <span id="texto-obra-nueva-info">En obra nueva <strong>no aplica ITP</strong> (tributa 10% IVA + IAJD)</span>
+                </div>
+                <span id="badge-obra-nueva-impuesto" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">10,75%</span>
               </div>
 
               <!-- Desplegable Acordeón de Gastos de Compraventa -->
@@ -669,6 +678,6 @@
     <span id="toast-mensaje">¡Enlace con tu simulación copiado!</span>
   </div>
 
-  <script src="app.js?v=2.1.0"></script>
+  <script src="app.js?v=2.1.1"></script>
 </body>
 </html>
