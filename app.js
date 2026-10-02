@@ -27,6 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const contenedorItpReducido = document.getElementById('contenedor-itp-reducido');
   const checkItpReducido = document.getElementById('check-itp-reducido');
   const badgeTipoImpuesto = document.getElementById('badge-tipo-impuesto');
+  const panelOpcionesReducido = document.getElementById('panel-opciones-reducido');
+  const subopcionesMadrid = document.getElementById('subopciones-madrid');
+  const btnMadridHabitual = document.getElementById('btn-madrid-habitual');
+  const btnMadridFamNum = document.getElementById('btn-madrid-fam-num');
+  const hintItpTexto = document.getElementById('hint-itp-texto');
+  let madridModoReducido = 'habitual';
   const contenedorObraNuevaInfo = document.getElementById('contenedor-obra-nueva-info');
   const textoObraNuevaInfo = document.getElementById('texto-obra-nueva-info');
   const badgeObraNuevaImpuesto = document.getElementById('badge-obra-nueva-impuesto');
@@ -64,11 +70,32 @@ document.addEventListener('DOMContentLoaded', () => {
     valencia: { nombre: 'Comunidad Valenciana', itp: 10.0, itpReducido: 6.0, iajd: 1.5 },
     extremadura: { nombre: 'Extremadura', itp: 8.0, itpReducido: 7.0, iajd: 1.5 },
     galicia: { nombre: 'Galicia', itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
-    madrid: { nombre: 'Madrid', itp: 6.0, itpReducido: 4.0, iajd: 0.75 },
+    madrid: { nombre: 'Madrid', itp: 6.0, itpReducido: 5.4, itpFamNum: 4.0, iajd: 0.75 },
     murcia: { nombre: 'Murcia', itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
     navarra: { nombre: 'Navarra', itp: 6.0, itpReducido: 5.0, iajd: 0.5 },
     pais_vasco: { nombre: 'País Vasco', itp: 4.0, itpReducido: 2.5, iajd: 0.5 },
     la_rioja: { nombre: 'La Rioja', itp: 7.0, itpReducido: 5.0, iajd: 1.0 }
+  };
+
+  const CCAA_HINTS = {
+    madrid: "💡 <strong>Comunidad de Madrid:</strong> Bonificación del 10% en cuota para vivienda habitual &le; 250.000 € (tipo efectivo: <strong>5,4%</strong>). Para familias numerosas aplica el <strong>4,0%</strong>.",
+    cataluna: "💡 <strong>Cataluña:</strong> Tipo reducido del <strong>5,0%</strong> para jóvenes &le; 32 años (renta &le; 36.000 €), familias numerosas o discapacidad.",
+    andalucia: "💡 <strong>Andalucía:</strong> Tipo reducido del <strong>3,5%</strong> para jóvenes &lt; 35 años o familias numerosas en vivienda habitual (hasta 150.000 € / 250.000 €).",
+    valencia: "💡 <strong>C. Valenciana:</strong> Tipo reducido del <strong>6,0%</strong> para jóvenes &le; 35 años (vivienda hasta 180.000 €) o <strong>4,0%</strong> para familias numerosas/VPO.",
+    galicia: "💡 <strong>Galicia:</strong> Tipo reducido del <strong>3,0%</strong> para menores de 36 años, familias numerosas o discapacidad.",
+    pais_vasco: "💡 <strong>País Vasco:</strong> Tipo reducido del <strong>2,5%</strong> en adquisición de vivienda habitual.",
+    castilla_leon: "💡 <strong>Castilla y León:</strong> Tipo reducido del <strong>4,0%</strong> para jóvenes &le; 36 años en municipios rurales o familias numerosas.",
+    baleares: "💡 <strong>Baleares:</strong> Tipo reducido del <strong>4,0%</strong> (o exención del 100% para menores de 30 años en primera vivienda habitual &le; 270k €).",
+    canarias: "💡 <strong>Canarias:</strong> Tipo reducido del <strong>4,0%</strong> para vivienda habitual de menores de 35 años o familias numerosas.",
+    aragon: "💡 <strong>Aragón:</strong> Tipo reducido del <strong>5,0%</strong> para jóvenes &lt; 35 años o familias numerosas en vivienda habitual.",
+    asturias: "💡 <strong>Asturias:</strong> Tipo reducido del <strong>3,0%</strong> para jóvenes &le; 35 años o familias numerosas.",
+    murcia: "💡 <strong>Murcia:</strong> Tipo reducido del <strong>3,0%</strong> para jóvenes &le; 35 años o familias numerosas.",
+    castilla_mancha: "💡 <strong>Castilla-La Mancha:</strong> Tipo reducido del <strong>5,0%</strong> para primera vivienda habitual de menores de 36 años.",
+    extremadura: "💡 <strong>Extremadura:</strong> Tipo reducido del <strong>7,0%</strong> (o 4,0%) para menores de 35 años en vivienda habitual hasta 180.000 €.",
+    cantabria: "💡 <strong>Cantabria:</strong> Tipo reducido del <strong>5,0%</strong> para jóvenes &lt; 35 años o familias numerosas.",
+    navarra: "💡 <strong>Navarra:</strong> Tipo reducido del <strong>5,0%</strong> para vivienda habitual o VPO.",
+    la_rioja: "💡 <strong>La Rioja:</strong> Tipo reducido del <strong>5,0%</strong> en vivienda habitual.",
+    ceuta_melilla: "💡 <strong>Ceuta y Melilla:</strong> Bonificación del 50% de la cuota (tipo efectivo del <strong>3,0%</strong>)."
   };
 
   // Actualiza dinámicamente las etiquetas del desplegable CCAA según el tipo de vivienda
@@ -262,6 +289,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Modalidad de reducción específica de Madrid (5,4% habitual vs 4,0% familia numerosa)
+  function actualizarEstiloMadridBotones() {
+    const activo = "px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500 cursor-pointer";
+    const inactivo = "px-2 py-0.5 rounded-md text-[11px] font-semibold bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-500 cursor-pointer";
+    if (btnMadridHabitual) btnMadridHabitual.className = (madridModoReducido === 'habitual') ? activo : inactivo;
+    if (btnMadridFamNum) btnMadridFamNum.className = (madridModoReducido === 'fam_numerosa') ? activo : inactivo;
+  }
+
+  if (btnMadridHabitual) {
+    btnMadridHabitual.addEventListener('click', () => {
+      madridModoReducido = 'habitual';
+      actualizarEstiloMadridBotones();
+      calcularYActualizar();
+    });
+  }
+
+  if (btnMadridFamNum) {
+    btnMadridFamNum.addEventListener('click', () => {
+      madridModoReducido = 'fam_numerosa';
+      actualizarEstiloMadridBotones();
+      calcularYActualizar();
+    });
+  }
+
   // Acordeón de Gastos
   if (btnToggleDesgloseGastos && panelDesgloseGastos) {
     btnToggleDesgloseGastos.addEventListener('click', () => {
@@ -302,7 +353,32 @@ document.addEventListener('DOMContentLoaded', () => {
       if (contenedorObraNuevaInfo) contenedorObraNuevaInfo.classList.add('hidden');
 
       const esReducido = checkItpReducido?.checked || false;
-      pctImpuesto = esReducido ? ccaaInfo.itpReducido : ccaaInfo.itp;
+      if (esReducido) {
+        if (panelOpcionesReducido) panelOpcionesReducido.classList.remove('hidden');
+        if (subopcionesMadrid) {
+          if (ccaaKey === 'madrid') {
+            subopcionesMadrid.classList.remove('hidden');
+            subopcionesMadrid.classList.add('flex');
+            actualizarEstiloMadridBotones();
+          } else {
+            subopcionesMadrid.classList.add('hidden');
+            subopcionesMadrid.classList.remove('flex');
+          }
+        }
+        if (hintItpTexto) {
+          hintItpTexto.innerHTML = CCAA_HINTS[ccaaKey] || '';
+        }
+
+        if (ccaaKey === 'madrid') {
+          pctImpuesto = (madridModoReducido === 'fam_numerosa') ? 4.0 : 5.4;
+        } else {
+          pctImpuesto = ccaaInfo.itpReducido;
+        }
+      } else {
+        if (panelOpcionesReducido) panelOpcionesReducido.classList.add('hidden');
+        pctImpuesto = ccaaInfo.itp;
+      }
+
       const pctStr = pctImpuesto.toFixed(1).replace('.0', '').replace('.', ',');
       nombreImpuesto = esReducido ? `ITP Reducido (${pctStr}%)` : `ITP (${pctStr}%)`;
 

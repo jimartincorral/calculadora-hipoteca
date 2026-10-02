@@ -236,12 +236,23 @@
               </div>
 
               <!-- Fila tipo reducido de ITP (Solo en Segunda Mano) -->
-              <div id="contenedor-itp-reducido" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700">
-                <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
-                  <input type="checkbox" id="check-itp-reducido" class="rounded text-indigo-600 focus:ring-indigo-500">
-                  <span>Tipo reducido de ITP (&lt; 32-35 años, familia numerosa o VPO)</span>
-                </label>
-                <span id="badge-tipo-impuesto" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">ITP 6%</span>
+              <div id="contenedor-itp-reducido" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
+                    <input type="checkbox" id="check-itp-reducido" class="rounded text-indigo-600 focus:ring-indigo-500">
+                    <span id="lbl-itp-reducido">Tipo reducido / Bonificación ITP</span>
+                  </label>
+                  <span id="badge-tipo-impuesto" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">ITP 6%</span>
+                </div>
+                <!-- Detalle y opciones específicas para la CCAA -->
+                <div id="panel-opciones-reducido" class="hidden pt-1.5 border-t border-slate-200/60 dark:border-slate-600/60 text-xs">
+                  <div id="subopciones-madrid" class="hidden flex flex-wrap items-center gap-2">
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">Modalidad Madrid:</span>
+                    <button type="button" id="btn-madrid-habitual" class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500 cursor-pointer">5,4% (Habitual &le; 250k)</button>
+                    <button type="button" id="btn-madrid-fam-num" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-500 cursor-pointer">4,0% (Fam. numerosa)</button>
+                  </div>
+                  <p id="hint-itp-texto" class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-1"></p>
+                </div>
               </div>
 
               <!-- Fila informativa Obra Nueva (Sin ITP, tributa por IVA + IAJD) -->
@@ -700,6 +711,6 @@
     <span id="toast-mensaje">¡Enlace con tu simulación copiado!</span>
   </div>
 
-  <script src="app.js?v=2.2.0"></script>
+  <script src="app.js?v=2.2.1"></script>
 </body>
 </html>
