@@ -6,7 +6,10 @@ Aplicación web interactiva y ligera para el cálculo de cuotas de hipotecas baj
 
 - **Simulador Integral de Compra de Vivienda y Gastos Asociados**:
   - **Selector de Modo**: Alterna al instante entre **Comprar Vivienda** (simulación completa de adquisición) e **Hipoteca Directa** (para hipotecas ya concedidas o capital fijo).
-  - **Precio de Compraventa y Financiación (LTV)**: Selector rápido de porcentaje a financiar (70%, 80%, 90%, 100% o personalizado) con chips táctiles de precio (`±10k`, `150k`, `200k`, `250k`, `300k`, `400k`).
+  - **Precio de Compraventa y Financiación Ajustable (LTV)**:
+    - Control total del porcentaje de financiación mediante **campo numérico directo**, **slider deslizante (10% - 100%)**, botones de ajuste fino (`-5%`, `+5%`) y accesos rápidos (`60%`, `70%`, `80% ⭐`, `90%`, `100%`).
+    - Visualización en tiempo real del importe de la entrada requerida tanto en porcentaje como en euros (€).
+    - Chips táctiles de precio de inmueble (`±10k`, `150k`, `200k`, `250k`, `300k`, `400k`).
   - **Impuestos por Comunidad Autónoma**:
     - **Segunda Mano (ITP)**: Aplica los tipos vigentes en cada una de las 17 Comunidades Autónomas y 2 Ciudades Autónomas (desde el 4% del País Vasco o 6% de Madrid hasta el 10% de Cataluña, C. Valenciana o Galicia).
     - **Casilla de Tipo Reducido**: Bonificaciones autonómicas para menores de 32/35 años, familias numerosas, personas con discapacidad o VPO.

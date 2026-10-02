@@ -17,8 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Elementos Modo Compra
   const inputPrecioInmueble = document.getElementById('precio-inmueble');
   const inputPctFinanciacion = document.getElementById('pct-financiacion');
+  const sliderFinanciacion = document.getElementById('slider-financiacion');
   const badgeEntradaPct = document.getElementById('badge-entrada-pct');
   const btnsLtv = document.querySelectorAll('[data-ltv-btn]');
+  const chipsLtvDelta = document.querySelectorAll('[data-chip-ltv-delta]');
 
   const selectTipoVivienda = document.getElementById('tipo-vivienda');
   const selectCCAA = document.getElementById('select-ccaa');
@@ -207,22 +209,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Selector LTV buttons (70%, 80%, 90%, 100%)
+  // Estilos de botones rápidos de Financiación (LTV)
+  const chipLtvActivo = "text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500 transition-all cursor-pointer";
+  const chipLtvInactivo = "text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer";
+
   function actualizarEstiloLtvBtns(ltvActivo) {
     btnsLtv.forEach(btn => {
       const val = parseFloat(btn.getAttribute('data-ltv-btn'));
-      if (val === ltvActivo) {
-        btn.className = "py-2 text-xs font-bold rounded-xl border border-indigo-500 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500 transition-all cursor-pointer";
-      } else {
-        btn.className = "py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 hover:border-indigo-500 text-slate-700 dark:text-slate-200 transition-all cursor-pointer";
-      }
+      btn.className = (val === ltvActivo) ? chipLtvActivo : chipLtvInactivo;
     });
   }
+
+  // Sincronización entre input numérico, slider y botones rápidos de Financiación
+  if (inputPctFinanciacion) {
+    inputPctFinanciacion.addEventListener('input', () => {
+      let val = parseFloat(inputPctFinanciacion.value);
+      if (isNaN(val)) val = 80;
+      if (sliderFinanciacion) sliderFinanciacion.value = val;
+      actualizarEstiloLtvBtns(val);
+      calcularYActualizar();
+    });
+  }
+
+  if (sliderFinanciacion) {
+    sliderFinanciacion.addEventListener('input', () => {
+      const val = parseFloat(sliderFinanciacion.value) || 80;
+      if (inputPctFinanciacion) inputPctFinanciacion.value = val;
+      actualizarEstiloLtvBtns(val);
+      calcularYActualizar();
+    });
+  }
+
+  chipsLtvDelta.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const delta = parseFloat(btn.getAttribute('data-chip-ltv-delta')) || 0;
+      let actual = parseFloat(inputPctFinanciacion?.value) || 80;
+      let nuevo = Math.min(100, Math.max(5, actual + delta));
+      if (inputPctFinanciacion) inputPctFinanciacion.value = nuevo;
+      if (sliderFinanciacion) sliderFinanciacion.value = nuevo;
+      actualizarEstiloLtvBtns(nuevo);
+      calcularYActualizar();
+    });
+  });
 
   btnsLtv.forEach(btn => {
     btn.addEventListener('click', () => {
       const val = parseFloat(btn.getAttribute('data-ltv-btn')) || 80;
       if (inputPctFinanciacion) inputPctFinanciacion.value = val;
+      if (sliderFinanciacion) sliderFinanciacion.value = val;
       actualizarEstiloLtvBtns(val);
       calcularYActualizar();
     });
@@ -333,8 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ahorroTotalNecesario = entrada + totalImpuestos + totalAranceles;
 
     // 4. Actualizar textos en la UI
-    if (badgeEntradaPct) badgeEntradaPct.textContent = `Entrada: ${Math.round(100 - ltv)}%`;
-    if (lblEntradaPct) lblEntradaPct.textContent = `${Math.round(100 - ltv)}%`;
+    if (badgeEntradaPct) badgeEntradaPct.textContent = `Entrada: ${Math.max(0, Math.round(100 - ltv))}% (${formatoMoneda.format(entrada)})`;
+    if (lblEntradaPct) lblEntradaPct.textContent = `${Math.max(0, Math.round(100 - ltv))}%`;
     if (resAhorroTotalCompra) resAhorroTotalCompra.textContent = formatoMoneda.format(ahorroTotalNecesario);
     if (resDesgloseEntrada) resDesgloseEntrada.textContent = formatoMoneda.format(entrada);
     if (resDesgloseImpuestos) resDesgloseImpuestos.textContent = formatoMoneda.format(totalImpuestos);
@@ -1284,6 +1318,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const l = parseFloat(params.get('ltv'));
       if (!isNaN(l) && l > 0) {
         inputPctFinanciacion.value = l;
+        if (sliderFinanciacion) sliderFinanciacion.value = l;
         actualizarEstiloLtvBtns(l);
       }
     }
