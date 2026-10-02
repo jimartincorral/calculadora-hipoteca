@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HipoCalc - Calculadora de Hipotecas y Amortizaciones</title>
+  <meta name="description" content="Calculadora de cuotas de hipotecas y simulador de amortizaciones anticipadas (sistema francés). Calcula reducción de cuota o plazo, ahorro en intereses y cuadro de amortización.">
+  <meta name="theme-color" content="#4f46e5">
+
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Open Graph / Redes Sociales -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="HipoCalc - Calculadora de Hipotecas y Amortizaciones">
+  <meta property="og:description" content="Simula tu hipoteca y calcula el impacto de amortizar anticipadamente: reducir cuota o plazo y cuánto ahorrarás en intereses.">
+  <meta property="og:image" content="favicon.svg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="HipoCalc - Calculadora de Hipotecas y Amortizaciones">
+  <meta name="twitter:description" content="Simula tu hipoteca y calcula el impacto de amortizar anticipadamente: reducir cuota o plazo y cuánto ahorrarás en intereses.">
+
+  <!-- Tailwind CSS CDN (Configuración para modo oscuro selector) -->
+  <script>
+    tailwind = {
+      config: {
+        darkMode: 'selector'
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'selector'
+    };
+  </script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Inicializar tema antes de renderizar para evitar destellos
+    const temaGuardado = localStorage.getItem('hipocalc_theme');
+    const prefiereOscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (temaGuardado === 'dark' || (!temaGuardado && prefiereOscuro)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    /* Alternancia robusta de iconos sol/luna */
+    html.dark #theme-icon-sun,
+    html.dark [data-theme-icon="sun"] { display: block !important; }
+    html.dark #theme-icon-moon,
+    html.dark [data-theme-icon="moon"] { display: none !important; }
+
+    html:not(.dark) #theme-icon-sun,
+    html:not(.dark) [data-theme-icon="sun"] { display: none !important; }
+    html:not(.dark) #theme-icon-moon,
+    html:not(.dark) [data-theme-icon="moon"] { display: block !important; }
+
+    /* Soporte de color-scheme nativo */
+    html.dark { color-scheme: dark; }
+    html.dark body { background-color: #0f172a !important; color: #f8fafc !important; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <!-- Header -->
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-indigo-600 text-white rounded-xl shadow-md">
+          <i data-lucide="calculator" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">HipoCalc</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Calculadora de Cuotas y Amortizaciones</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Botón de Modo Oscuro -->
+        <button id="btn-theme-toggle" type="button" aria-label="Cambiar tema claro u oscuro" title="Cambiar tema claro / oscuro" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 transition-colors shadow-xs active:scale-95 cursor-pointer">
+          <i id="theme-icon-sun" data-theme-icon="sun" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+          <i id="theme-icon-moon" data-theme-icon="moon" data-lucide="moon" class="w-4 h-4 text-indigo-600"></i>
+        </button>
+
+        <!-- Botón Compartir -->
+        <button id="btn-compartir" type="button" title="Copiar enlace con los datos de esta simulación" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 transition-colors shadow-xs active:scale-95">
+          <i data-lucide="share-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          <span>Compartir</span>
+        </button>
+
+        <div class="hidden sm:flex text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-3 py-1.5 rounded-full items-center gap-1.5 border border-slate-200 dark:border-slate-600">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema Francés
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Panel de Controles y Datos (5 cols en desktop) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Tarjeta: Datos Básicos del Préstamo -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <i data-lucide="home" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+            Datos del Préstamo
+          </h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label for="capital" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Capital Pendiente / Solicitado (€)
+              </label>
+              <div class="relative">
+                <input type="number" id="capital" value="180000" min="1000" step="1000"
+                  class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white font-medium">
+                <span class="absolute right-3.5 top-2.5 text-slate-400 font-medium">€</span>
+              </div>
+              <!-- Chips rápidos de capital -->
+              <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                <button type="button" data-chip-cap-delta="-10000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">-10k</button>
+                <button type="button" data-chip-cap-delta="10000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">+10k</button>
+                <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
+                <button type="button" data-chip-cap-set="100000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">100k</button>
+                <button type="button" data-chip-cap-set="150000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">150k</button>
+                <button type="button" data-chip-cap-set="200000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">200k</button>
+                <button type="button" data-chip-cap-set="250000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">250k</button>
+                <button type="button" data-chip-cap-set="300000" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">300k</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="interes" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Interés Anual (% TIN)
+                </label>
+                <div class="relative">
+                  <input type="number" id="interes" value="2.85" min="0.01" max="25" step="0.05"
+                    class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white font-medium">
+                  <span class="absolute right-3.5 top-2.5 text-slate-400 font-medium">%</span>
+                </div>
+                <!-- Chips rápidos de interés -->
+                <div class="flex flex-wrap items-center gap-1 mt-2">
+                  <button type="button" data-chip-int-set="2.0" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">2,0%</button>
+                  <button type="button" data-chip-int-set="2.5" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">2,5%</button>
+                  <button type="button" data-chip-int-set="3.0" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">3,0%</button>
+                  <button type="button" data-chip-int-set="3.5" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">3,5%</button>
+                </div>
+              </div>
+
+              <!-- Plazo con selector Años / Meses -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="plazo" id="lbl-plazo" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    Plazo Restante
+                  </label>
+                  <div class="inline-flex p-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-600">
+                    <button type="button" id="btn-unidad-anios" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 shadow-xs text-indigo-700 dark:text-indigo-300 font-bold transition-all">Años</button>
+                    <button type="button" id="btn-unidad-meses" class="px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">Meses</button>
+                  </div>
+                </div>
+                <div class="relative">
+                  <input type="number" id="plazo" value="25" min="1" max="600" step="1"
+                    class="w-full pl-4 pr-16 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white font-medium">
+                  <span id="badge-unidad-plazo" class="absolute right-3.5 top-2.5 text-slate-400 font-medium text-xs pt-0.5">años</span>
+                </div>
+                <span id="hint-plazo-conversion" class="text-[11px] text-slate-400 dark:text-slate-400 mt-1 block">Equivale a 300 meses</span>
+                <!-- Chips rápidos de plazo -->
+                <div class="flex flex-wrap items-center gap-1 mt-2">
+                  <button type="button" data-chip-plazo-set="15" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer"><span class="chip-plazo-num">15</span><span class="chip-plazo-lbl">a</span></button>
+                  <button type="button" data-chip-plazo-set="20" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer"><span class="chip-plazo-num">20</span><span class="chip-plazo-lbl">a</span></button>
+                  <button type="button" data-chip-plazo-set="25" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer"><span class="chip-plazo-num">25</span><span class="chip-plazo-lbl">a</span></button>
+                  <button type="button" data-chip-plazo-set="30" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer"><span class="chip-plazo-num">30</span><span class="chip-plazo-lbl">a</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta: Amortización Anticipada -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="piggy-bank" class="w-5 h-5 text-emerald-600 dark:text-emerald-400"></i>
+              Amortización Anticipada
+            </h2>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="activar-amortizacion" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+            Simula el impacto de realizar aportaciones extraordinarias en tu hipoteca.
+          </p>
+
+          <div id="seccion-amortizacion" class="space-y-4 opacity-40 pointer-events-none transition-all duration-200">
+            
+            <!-- Modalidad de amortización -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
+                Estrategia al Amortizar
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="border border-slate-300 dark:border-slate-600 rounded-xl p-3 flex flex-col cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors has-[:checked]:bg-emerald-50 has-[:checked]:dark:bg-emerald-950/40 has-[:checked]:border-emerald-500 has-[:checked]:ring-1 has-[:checked]:ring-emerald-500">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-semibold text-slate-900 dark:text-white">Reducir Cuota</span>
+                    <input type="radio" name="modalidad-amort" value="cuota" checked class="text-emerald-600 focus:ring-emerald-500">
+                  </div>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Baja la cuota bancaria obligatoria.</span>
+                </label>
+                <label class="border border-slate-300 dark:border-slate-600 rounded-xl p-3 flex flex-col cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors has-[:checked]:bg-emerald-50 has-[:checked]:dark:bg-emerald-950/40 has-[:checked]:border-emerald-500 has-[:checked]:ring-1 has-[:checked]:ring-emerald-500">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-semibold text-slate-900 dark:text-white">Reducir Plazo</span>
+                    <input type="radio" name="modalidad-amort" value="plazo" class="text-emerald-600 focus:ring-emerald-500">
+                  </div>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Mantienes la cuota y terminas antes.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Tipo de amortización -->
+            <div>
+              <label for="tipo-amort" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Modalidad de Aportación
+              </label>
+              <select id="tipo-amort" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium">
+                <option value="pago_fijo" selected>⭐ Complementar hasta una cantidad fija mensual</option>
+                <option value="recurrente">Aportación extra mensual fija (+X €/mes)</option>
+                <option value="puntual">Aportación puntual única (en un mes específico)</option>
+              </select>
+            </div>
+
+            <!-- Importe amortización -->
+            <div>
+              <label id="lbl-importe-amort" for="importe-amort" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Pago Mensual Total Deseado (€)
+              </label>
+              <div class="relative">
+                <input type="number" id="importe-amort" value="1000" min="10" step="50"
+                  class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium">
+                <span class="absolute right-3.5 top-2.5 text-slate-400 font-medium">€</span>
+              </div>
+              <!-- Chips rápidos para Importe Amortización -->
+              <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                <button type="button" data-chip-amort-delta="50" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 dark:bg-slate-700 dark:hover:bg-emerald-900/40 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-300 transition-all cursor-pointer">+50 €</button>
+                <button type="button" data-chip-amort-delta="100" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 dark:bg-slate-700 dark:hover:bg-emerald-900/40 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-300 transition-all cursor-pointer">+100 €</button>
+                <button type="button" data-chip-amort-delta="200" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 dark:bg-slate-700 dark:hover:bg-emerald-900/40 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-300 transition-all cursor-pointer">+200 €</button>
+                <button type="button" data-chip-amort-delta="500" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 dark:bg-slate-700 dark:hover:bg-emerald-900/40 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-300 transition-all cursor-pointer">+500 €</button>
+              </div>
+              <p id="hint-importe-amort" class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                Pagas un total fijo cada mes. Lo que sobre tras pagar la cuota de la hipoteca se amortiza automáticamente.
+              </p>
+              <div id="alerta-cuota-insuficiente" class="hidden mt-2 p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 rounded-xl text-xs flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                <span id="texto-alerta-insuficiente">El pago total debe ser superior a la cuota mensual ordinaria para poder amortizar.</span>
+              </div>
+            </div>
+
+            <!-- Momento / Mes de amortización -->
+            <div id="campo-mes-amort">
+              <label id="lbl-mes-amort" for="mes-amort" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                ¿A partir de qué mes comenzar?
+              </label>
+              <div class="flex items-center gap-3">
+                <input type="number" id="mes-amort" value="1" min="1" max="600" step="1"
+                  class="w-full pl-4 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium">
+                <span id="mes-amort-hint" class="text-xs font-semibold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg whitespace-nowrap min-w-[100px] text-center">Año 1, Mes 1</span>
+              </div>
+            </div>
+
+            <!-- Comisión por amortización anticipada -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="comision-amort" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  Comisión por Amortización
+                </label>
+                <span class="text-[11px] text-slate-400 font-medium">Compensación banco</span>
+              </div>
+              <div class="relative">
+                <input type="number" id="comision-amort" value="0" min="0" max="5" step="0.05"
+                  class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/60 focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium">
+                <span class="absolute right-3.5 top-2.5 text-slate-400 font-medium">%</span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                Porcentaje que cobra tu entidad por reembolso anticipado (suele ser 0%, 0,15% o 0,25% según contrato y ley).
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Panel de Resultados (7 cols en desktop) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Tarjetas Resumen Principales (4 métricas clave) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- Tarjeta 1: Desembolso Mensual Total -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden transition-colors">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Desembolso Mensual</span>
+              <div class="p-1.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                <i data-lucide="wallet" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <span id="res-desembolso-mes" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">0,00 €</span>
+              <span id="badge-desembolso" class="hidden ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200">Total</span>
+            </div>
+            <p id="res-desembolso-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Lo que pagas de tu bolsillo al mes</p>
+          </div>
+
+          <!-- Tarjeta 2: Cuota Bancaria Contractual -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden transition-colors">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cuota Obligatoria Banco</span>
+              <div class="p-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg">
+                <i data-lucide="building-2" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <span id="res-cuota-banco" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">0,00 €</span>
+              <span id="badge-cuota-banco" class="hidden ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">Baja</span>
+            </div>
+            <p id="res-cuota-banco-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Recibo mensual ordinario</p>
+          </div>
+
+          <!-- Tarjeta 3: Total Intereses y Ahorro -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden transition-colors">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Intereses</span>
+              <div class="p-1.5 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-lg">
+                <i data-lucide="percent" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <span id="res-intereses" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">0,00 €</span>
+            </div>
+            <p id="res-ahorro-intereses" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Coste financiero total</p>
+          </div>
+
+          <!-- Tarjeta 4: Duración Real / Plazo Ahorrado -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden transition-colors">
+            <div class="flex items-center justify-between">
+              <span id="lbl-duracion-tarjeta" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duración Real</span>
+              <div class="p-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <span id="res-duracion" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">25 años</span>
+            </div>
+            <p id="res-duracion-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tiempo hasta liquidar la hipoteca</p>
+          </div>
+
+        </div>
+
+        <!-- Banner de Impacto de la Amortización -->
+        <div id="banner-impacto" class="hidden p-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-md">
+          <div class="flex items-start gap-3.5">
+            <div class="p-2.5 bg-white/20 rounded-xl shrink-0">
+              <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                Resumen del Ahorro Obtenido
+              </h3>
+              <p id="banner-impacto-texto" class="text-sm text-emerald-50 mt-1 leading-relaxed">
+                Calculando impacto...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos Interactivos con Chart.js (3 Vistas) -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-2">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="bar-chart-3" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+              Visualización Gráfica
+            </h3>
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <button id="btn-chart-cuota" class="px-3 py-1.5 rounded-lg font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 transition-colors">
+                Cuota Mensual
+              </button>
+              <button id="btn-chart-evolution" class="px-3 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                Evolución de Deuda
+              </button>
+              <button id="btn-chart-doughnut" class="px-3 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                Distribución Capital/Interés
+              </button>
+            </div>
+          </div>
+
+          <div class="h-64 sm:h-72 mt-4 relative flex items-center justify-center">
+            <canvas id="graficoHipoteca"></canvas>
+          </div>
+        </div>
+
+        <!-- Cuadro de Amortización (Tabla) -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="table-2" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+                Cuadro de Amortización
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Desglose completo de pagos, intereses y saldo</p>
+            </div>
+            <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl text-xs font-semibold">
+              <button id="tab-anual" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-slate-800 dark:text-white transition-all">Resumen Anual</button>
+              <button id="tab-mensual" class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">Mes a Mes</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto max-h-96 overflow-y-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 uppercase text-[11px] tracking-wider sticky top-0 border-b border-slate-200 dark:border-slate-700">
+                <tr>
+                  <th class="py-3 px-4 font-semibold">Período</th>
+                  <th class="py-3 px-4 font-semibold text-right">Cuota Banco</th>
+                  <th class="py-3 px-4 font-semibold text-right text-emerald-700 dark:text-emerald-400">Amort. Extra</th>
+                  <th class="py-3 px-4 font-semibold text-right bg-slate-100/70 dark:bg-slate-700/50">Total Pagado</th>
+                  <th class="py-3 px-4 font-semibold text-right text-amber-700 dark:text-amber-400">Intereses</th>
+                  <th class="py-3 px-4 font-semibold text-right text-indigo-700 dark:text-indigo-400">Capital Amort.</th>
+                  <th class="py-3 px-4 font-semibold text-right">Saldo Pendiente</th>
+                </tr>
+              </thead>
+              <tbody id="cuerpo-tabla-amortizacion" class="divide-y divide-slate-100 dark:divide-slate-700/60 text-slate-700 dark:text-slate-300">
+                <!-- Rellenado dinámicamente con JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer con Disclaimer Legal -->
+  <footer class="mt-16 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-10 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-700">
+        <div class="flex items-center space-x-2.5">
+          <div class="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm">
+            <i data-lucide="calculator" class="w-4 h-4"></i>
+          </div>
+          <span class="font-bold text-slate-800 dark:text-white text-sm">HipoCalc</span>
+          <span class="text-xs text-slate-400">· Simulador de Hipotecas y Amortizaciones</span>
+        </div>
+        <p class="text-xs text-slate-400">
+          Cálculos matemáticos según el método estándar de amortización francés
+        </p>
+      </div>
+
+      <div class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 text-xs text-slate-500 dark:text-slate-400 space-y-2.5 leading-relaxed">
+        <div class="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0"></i>
+          <span>Aviso Legal y Disclaimer Financiero</span>
+        </div>
+        <p>
+          Esta aplicación web es una herramienta de simulación con fines estrictamente <strong>informativos, divulgativos y orientativos</strong>. No constituye asesoramiento financiero, crediticio, legal, fiscal ni una oferta o propuesta contractual vinculante por parte de ninguna entidad bancaria o intermediario de crédito inmobiliario.
+        </p>
+        <p>
+          Los importes calculados pueden presentar ligeras discrepancias respecto a las liquidaciones reales emitidas por tu entidad financiera debido a la convención de días de cálculo (año comercial de 360 días vs. año natural de 365/366 días), fechas exactas de adeudo, gastos arancelarios, tasación o productos de vinculación obligatorios o bonificadores (seguros de vida, hogar, planes de pensiones).
+        </p>
+        <p>
+          Las comisiones por amortización anticipada (compensación por reembolso) están reguladas en España por la <em>Ley 5/2019, de 15 de marzo, reguladora de los contratos de crédito inmobiliario</em>, y quedan sujetas a las condiciones pactadas en la escritura pública del préstamo hipotecario.
+        </p>
+      </div>
+
+      <div class="text-center text-xs text-slate-400 pt-2">
+        HipoCalc © 2026 · Software libre y gratuito para simulación hipotecaria personal.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Notificación Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 pointer-events-none transition-all duration-300 ease-out flex items-center gap-2.5 px-4 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl text-xs sm:text-sm font-medium border border-slate-700">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+    <span id="toast-mensaje">¡Enlace con tu simulación copiado!</span>
+  </div>
+
+  <script src="app.js?v=2.0.2"></script>
+</body>
+</html>
