@@ -4,6 +4,18 @@ Aplicación web interactiva y ligera para el cálculo de cuotas de hipotecas baj
 
 ## 🚀 Características y Modalidades
 
+- **Simulador Integral de Compra de Vivienda y Gastos Asociados**:
+  - **Selector de Modo**: Alterna al instante entre **Comprar Vivienda** (simulación completa de adquisición) e **Hipoteca Directa** (para hipotecas ya concedidas o capital fijo).
+  - **Precio de Compraventa y Financiación (LTV)**: Selector rápido de porcentaje a financiar (70%, 80%, 90%, 100% o personalizado) con chips táctiles de precio (`±10k`, `150k`, `200k`, `250k`, `300k`, `400k`).
+  - **Impuestos por Comunidad Autónoma**:
+    - **Segunda Mano (ITP)**: Aplica los tipos vigentes en cada una de las 17 Comunidades Autónomas y 2 Ciudades Autónomas (desde el 4% del País Vasco o 6% de Madrid hasta el 10% de Cataluña, C. Valenciana o Galicia).
+    - **Casilla de Tipo Reducido**: Bonificaciones autonómicas para menores de 32/35 años, familias numerosas, personas con discapacidad o VPO.
+    - **Obra Nueva (IVA + IAJD)**: Cálculo automático del 10% de IVA + Actos Jurídicos Documentados (IAJD) de compraventa según la CCAA seleccionada.
+  - **Aranceles y Gastos Regulados (Desplegable interactivo)**:
+    - Estimación automática de Notaría y Registro según aranceles oficiales, más gestoría y tasación hipotecaria.
+    - **Cumplimiento Ley 5/2019**: Clarificación informativa de que los gastos de constitución hipotecaria (IAJD bancario, notaría y registro del préstamo) son abonados por la entidad bancaria.
+  - **Cálculo del Ahorro Necesario en Mano**:
+    - Tarjeta resumen con el capital total que necesitas tener ahorrado antes de comprar: **Entrada + Impuestos + Gastos**, y el importe exacto del préstamo concedido por el banco que alimenta de forma reactiva la simulación de amortización.
 - **Selector Flexible de Plazo (Años o Meses)**:
   - Permite introducir el plazo restante en **años** o en **meses** (ideal si ya llevas tiempo con tu hipoteca o para cálculos con meses exactos).
   - Conversión instantánea bidireccional con indicación textual de equivalencia.

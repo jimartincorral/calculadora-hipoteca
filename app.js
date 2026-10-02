@@ -6,7 +6,66 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
   }
 
-  // Elementos de entrada
+  // Modo de Cálculo ('compra' | 'directo')
+  let modoCalculo = 'compra';
+
+  const btnModoCompra = document.getElementById('btn-modo-compra');
+  const btnModoDirecto = document.getElementById('btn-modo-directo');
+  const seccionCompraGastos = document.getElementById('seccion-compra-gastos');
+  const seccionModoDirecto = document.getElementById('seccion-modo-directo');
+
+  // Elementos Modo Compra
+  const inputPrecioInmueble = document.getElementById('precio-inmueble');
+  const inputPctFinanciacion = document.getElementById('pct-financiacion');
+  const badgeEntradaPct = document.getElementById('badge-entrada-pct');
+  const btnsLtv = document.querySelectorAll('[data-ltv-btn]');
+
+  const selectTipoVivienda = document.getElementById('tipo-vivienda');
+  const selectCCAA = document.getElementById('select-ccaa');
+  const checkItpReducido = document.getElementById('check-itp-reducido');
+  const badgeTipoImpuesto = document.getElementById('badge-tipo-impuesto');
+
+  const btnToggleDesgloseGastos = document.getElementById('btn-toggle-desglose-gastos');
+  const panelDesgloseGastos = document.getElementById('panel-desglose-gastos');
+  const iconoChevronGastos = document.getElementById('icono-chevron-gastos');
+  const badgeTotalAranceles = document.getElementById('badge-total-aranceles');
+
+  const inputGastoNotaria = document.getElementById('gasto-notaria');
+  const inputGastoRegistro = document.getElementById('gasto-registro');
+  const inputGastoGestoria = document.getElementById('gasto-gestoria');
+  const inputGastoTasacion = document.getElementById('gasto-tasacion');
+
+  const resAhorroTotalCompra = document.getElementById('res-ahorro-total-compra');
+  const lblEntradaPct = document.getElementById('lbl-entrada-pct');
+  const resDesgloseEntrada = document.getElementById('res-desglose-entrada');
+  const lblTipoImpuestoCaja = document.getElementById('lbl-tipo-impuesto-caja');
+  const resDesgloseImpuestos = document.getElementById('res-desglose-impuestos');
+  const resDesgloseGastos = document.getElementById('res-desglose-gastos');
+  const resImporteHipotecaCompra = document.getElementById('res-importe-hipoteca-compra');
+
+  // Tipos impositivos por CCAA en España (ITP general, ITP reducido y IAJD compraventa)
+  const CCAA_IMPUESTOS = {
+    andalucia: { itp: 7.0, itpReducido: 3.5, iajd: 1.2 },
+    aragon: { itp: 8.0, itpReducido: 5.0, iajd: 1.5 },
+    asturias: { itp: 8.0, itpReducido: 3.0, iajd: 1.2 },
+    baleares: { itp: 8.0, itpReducido: 4.0, iajd: 1.5 },
+    canarias: { itp: 6.5, itpReducido: 4.0, iajd: 1.0 },
+    cantabria: { itp: 10.0, itpReducido: 5.0, iajd: 1.5 },
+    castilla_mancha: { itp: 9.0, itpReducido: 5.0, iajd: 1.5 },
+    castilla_leon: { itp: 8.0, itpReducido: 4.0, iajd: 1.5 },
+    cataluna: { itp: 10.0, itpReducido: 5.0, iajd: 1.5 },
+    ceuta_melilla: { itp: 6.0, itpReducido: 3.0, iajd: 0.5 },
+    valencia: { itp: 10.0, itpReducido: 6.0, iajd: 1.5 },
+    extremadura: { itp: 8.0, itpReducido: 7.0, iajd: 1.5 },
+    galicia: { itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
+    madrid: { itp: 6.0, itpReducido: 4.0, iajd: 0.75 },
+    murcia: { itp: 8.0, itpReducido: 3.0, iajd: 1.5 },
+    navarra: { itp: 6.0, itpReducido: 5.0, iajd: 0.5 },
+    pais_vasco: { itp: 4.0, itpReducido: 2.5, iajd: 0.5 },
+    la_rioja: { itp: 7.0, itpReducido: 5.0, iajd: 1.0 }
+  };
+
+  // Elementos de entrada del préstamo
   const inputCapital = document.getElementById('capital');
   const inputInteres = document.getElementById('interes');
   const inputPlazo = document.getElementById('plazo');
@@ -88,6 +147,159 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.classList.remove('translate-y-0', 'opacity-100');
       toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
     }, duracion);
+  }
+
+  // Alternador de Modo de Cálculo (Comprar Vivienda vs Préstamo Directo)
+  const modoBtnActivo = "px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer";
+  const modoBtnInactivo = "px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-1.5 cursor-pointer";
+
+  function fijarModoCalculo(nuevoModo) {
+    modoCalculo = nuevoModo;
+    if (nuevoModo === 'compra') {
+      if (btnModoCompra) btnModoCompra.className = modoBtnActivo;
+      if (btnModoDirecto) btnModoDirecto.className = modoBtnInactivo;
+      if (seccionCompraGastos) seccionCompraGastos.classList.remove('hidden');
+      if (seccionModoDirecto) seccionModoDirecto.classList.add('hidden');
+    } else {
+      modoCalculo = 'directo';
+      if (btnModoDirecto) btnModoDirecto.className = modoBtnActivo;
+      if (btnModoCompra) btnModoCompra.className = modoBtnInactivo;
+      if (seccionCompraGastos) seccionCompraGastos.classList.add('hidden');
+      if (seccionModoDirecto) seccionModoDirecto.classList.remove('hidden');
+    }
+  }
+
+  if (btnModoCompra) {
+    btnModoCompra.addEventListener('click', () => {
+      fijarModoCalculo('compra');
+      calcularYActualizar();
+    });
+  }
+
+  if (btnModoDirecto) {
+    btnModoDirecto.addEventListener('click', () => {
+      fijarModoCalculo('directo');
+      calcularYActualizar();
+    });
+  }
+
+  // Selector LTV buttons (70%, 80%, 90%, 100%)
+  function actualizarEstiloLtvBtns(ltvActivo) {
+    btnsLtv.forEach(btn => {
+      const val = parseFloat(btn.getAttribute('data-ltv-btn'));
+      if (val === ltvActivo) {
+        btn.className = "py-2 text-xs font-bold rounded-xl border border-indigo-500 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500 transition-all cursor-pointer";
+      } else {
+        btn.className = "py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 hover:border-indigo-500 text-slate-700 dark:text-slate-200 transition-all cursor-pointer";
+      }
+    });
+  }
+
+  btnsLtv.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = parseFloat(btn.getAttribute('data-ltv-btn')) || 80;
+      if (inputPctFinanciacion) inputPctFinanciacion.value = val;
+      actualizarEstiloLtvBtns(val);
+      calcularYActualizar();
+    });
+  });
+
+  // Acordeón de Gastos
+  if (btnToggleDesgloseGastos && panelDesgloseGastos) {
+    btnToggleDesgloseGastos.addEventListener('click', () => {
+      const cerrado = panelDesgloseGastos.classList.toggle('hidden');
+      if (iconoChevronGastos) {
+        iconoChevronGastos.style.transform = cerrado ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    });
+  }
+
+  // Detección de edición manual de aranceles
+  [inputGastoNotaria, inputGastoRegistro].forEach(inp => {
+    if (inp) {
+      inp.addEventListener('input', () => {
+        inp.dataset.autocalc = 'false';
+      });
+    }
+  });
+
+  // Cálculo de gastos e impuestos de compraventa e hipoteca
+  function calcularGastosCompra() {
+    const precio = parseFloat(inputPrecioInmueble?.value) || 0;
+    const ltv = parseFloat(inputPctFinanciacion?.value) || 80;
+    const tipoViv = selectTipoVivienda?.value || 'segunda_mano';
+    const ccaaKey = selectCCAA?.value || 'madrid';
+    const esReducido = checkItpReducido?.checked || false;
+    const ccaaInfo = CCAA_IMPUESTOS[ccaaKey] || CCAA_IMPUESTOS.madrid;
+
+    // 1. Porcentaje de impuesto aplicable
+    let pctImpuesto = 0;
+    let nombreImpuesto = '';
+    if (tipoViv === 'segunda_mano') {
+      pctImpuesto = esReducido ? ccaaInfo.itpReducido : ccaaInfo.itp;
+      nombreImpuesto = `ITP (${pctImpuesto.toFixed(1).replace('.0', '')}%)`;
+    } else {
+      const pctIva = ccaaKey === 'canarias' ? 6.5 : 10.0;
+      const pctIajd = ccaaInfo.iajd;
+      pctImpuesto = pctIva + pctIajd;
+      nombreImpuesto = `IVA ${pctIva}% + IAJD ${pctIajd}%`;
+    }
+
+    if (badgeTipoImpuesto) badgeTipoImpuesto.textContent = nombreImpuesto;
+    if (lblTipoImpuestoCaja) lblTipoImpuestoCaja.textContent = nombreImpuesto;
+
+    // 2. Gastos arancelarios y tasación (auto-cálculo si no están editados a mano)
+    let notaria = parseFloat(inputGastoNotaria?.value);
+    if (isNaN(notaria) || inputGastoNotaria?.dataset.autocalc === 'true') {
+      notaria = Math.round(Math.min(1400, Math.max(650, 600 + (precio * 0.0012))));
+      if (inputGastoNotaria) {
+        inputGastoNotaria.value = notaria;
+        inputGastoNotaria.dataset.autocalc = 'true';
+      }
+    }
+
+    let registro = parseFloat(inputGastoRegistro?.value);
+    if (isNaN(registro) || inputGastoRegistro?.dataset.autocalc === 'true') {
+      registro = Math.round(Math.min(750, Math.max(350, 300 + (precio * 0.0006))));
+      if (inputGastoRegistro) {
+        inputGastoRegistro.value = registro;
+        inputGastoRegistro.dataset.autocalc = 'true';
+      }
+    }
+
+    const gestoria = parseFloat(inputGastoGestoria?.value) || 350;
+    const tasacion = parseFloat(inputGastoTasacion?.value) || 350;
+    const totalAranceles = notaria + registro + gestoria + tasacion;
+
+    if (badgeTotalAranceles) {
+      badgeTotalAranceles.textContent = `(~${formatoMoneda.format(totalAranceles)})`;
+    }
+
+    // 3. Importes principales
+    const hipoteca = Math.round(precio * (ltv / 100));
+    const entrada = Math.max(0, precio - hipoteca);
+    const totalImpuestos = Math.round(precio * (pctImpuesto / 100));
+    const ahorroTotalNecesario = entrada + totalImpuestos + totalAranceles;
+
+    // 4. Actualizar textos en la UI
+    if (badgeEntradaPct) badgeEntradaPct.textContent = `Entrada: ${Math.round(100 - ltv)}%`;
+    if (lblEntradaPct) lblEntradaPct.textContent = `${Math.round(100 - ltv)}%`;
+    if (resAhorroTotalCompra) resAhorroTotalCompra.textContent = formatoMoneda.format(ahorroTotalNecesario);
+    if (resDesgloseEntrada) resDesgloseEntrada.textContent = formatoMoneda.format(entrada);
+    if (resDesgloseImpuestos) resDesgloseImpuestos.textContent = formatoMoneda.format(totalImpuestos);
+    if (resDesgloseGastos) resDesgloseGastos.textContent = formatoMoneda.format(totalAranceles);
+    if (resImporteHipotecaCompra) resImporteHipotecaCompra.textContent = formatoMoneda.format(hipoteca);
+
+    return {
+      precio,
+      ltv,
+      hipoteca,
+      entrada,
+      pctImpuesto,
+      totalImpuestos,
+      totalAranceles,
+      ahorroTotalNecesario
+    };
   }
 
   // Alternador de unidad de plazo (Años vs Meses)
@@ -198,7 +410,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   selectTipoAmort.addEventListener('change', () => {
     const tipo = selectTipoAmort.value;
-    const capital = parseFloat(inputCapital.value) || 0;
+    let capital = 0;
+    if (modoCalculo === 'compra') {
+      capital = Math.round((parseFloat(inputPrecioInmueble?.value) || 0) * ((parseFloat(inputPctFinanciacion?.value) || 80) / 100));
+    } else {
+      capital = parseFloat(inputCapital.value) || 0;
+    }
     const interesAnual = parseFloat(inputInteres.value) || 0;
     const totalMeses = obtenerTotalMeses();
     const r = (interesAnual / 100) / 12;
@@ -238,8 +455,12 @@ document.addEventListener('DOMContentLoaded', () => {
     calcularYActualizar();
   });
 
-  [inputCapital, inputInteres, inputImporteAmort, inputComisionAmort].forEach(input => {
+  [inputCapital, inputInteres, inputImporteAmort, inputComisionAmort, inputPrecioInmueble, inputGastoNotaria, inputGastoRegistro, inputGastoGestoria, inputGastoTasacion].forEach(input => {
     if (input) input.addEventListener('input', calcularYActualizar);
+  });
+
+  [selectTipoVivienda, selectCCAA, checkItpReducido].forEach(input => {
+    if (input) input.addEventListener('change', calcularYActualizar);
   });
 
   Array.from(radiosModalidad).forEach(radio => {
@@ -415,7 +636,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cálculo general y actualización de UI
   function calcularYActualizar() {
-    const capital = parseFloat(inputCapital.value) || 0;
+    let capital = 0;
+    if (modoCalculo === 'compra') {
+      const datosCompra = calcularGastosCompra();
+      capital = datosCompra.hipoteca;
+      if (inputCapital) inputCapital.value = capital;
+    } else {
+      capital = parseFloat(inputCapital.value) || 0;
+    }
+
     const interesAnual = parseFloat(inputInteres.value) || 0;
     const totalMeses = obtenerTotalMeses();
 
@@ -947,7 +1176,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sincronización de parámetros en la URL (Deep Linking)
   function sincronizarURL() {
     const params = new URLSearchParams();
-    if (inputCapital.value) params.set('capital', inputCapital.value);
+
+    params.set('modo', modoCalculo);
+    if (modoCalculo === 'compra') {
+      if (inputPrecioInmueble?.value) params.set('precio', inputPrecioInmueble.value);
+      if (inputPctFinanciacion?.value) params.set('ltv', inputPctFinanciacion.value);
+      if (selectTipoVivienda?.value) params.set('viv', selectTipoVivienda.value);
+      if (selectCCAA?.value) params.set('ccaa', selectCCAA.value);
+      if (checkItpReducido?.checked) params.set('red', '1');
+    } else {
+      if (inputCapital?.value) params.set('capital', inputCapital.value);
+    }
+
     if (inputInteres.value) params.set('interes', inputInteres.value);
     if (inputPlazo.value) params.set('plazo', inputPlazo.value);
     if (unidadPlazo === 'meses') params.set('unidad', 'meses');
@@ -974,7 +1214,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function cargarDesdeURL() {
     const params = new URLSearchParams(window.location.search);
-    if (!params.has('capital') && !params.has('interes') && !params.has('plazo')) return false;
+    if (!params.has('capital') && !params.has('interes') && !params.has('plazo') && !params.has('precio') && !params.has('modo')) return false;
+
+    if (params.has('modo')) {
+      const m = params.get('modo');
+      fijarModoCalculo(m === 'directo' ? 'directo' : 'compra');
+    } else if (params.has('capital') && !params.has('precio')) {
+      fijarModoCalculo('directo');
+    } else {
+      fijarModoCalculo('compra');
+    }
+
+    if (params.has('precio') && inputPrecioInmueble) {
+      const pr = parseFloat(params.get('precio'));
+      if (!isNaN(pr) && pr > 0) inputPrecioInmueble.value = pr;
+    }
+    if (params.has('ltv') && inputPctFinanciacion) {
+      const l = parseFloat(params.get('ltv'));
+      if (!isNaN(l) && l > 0) {
+        inputPctFinanciacion.value = l;
+        actualizarEstiloLtvBtns(l);
+      }
+    }
+    if (params.has('viv') && selectTipoVivienda) {
+      const v = params.get('viv');
+      if (['segunda_mano', 'obra_nueva'].includes(v)) selectTipoVivienda.value = v;
+    }
+    if (params.has('ccaa') && selectCCAA) {
+      const c = params.get('ccaa');
+      if (CCAA_IMPUESTOS[c]) selectCCAA.value = c;
+    }
+    if (params.has('red') && checkItpReducido) {
+      checkItpReducido.checked = (params.get('red') === '1' || params.get('red') === 'true');
+    }
 
     if (params.has('capital')) {
       const c = parseFloat(params.get('capital'));
@@ -1084,6 +1356,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Botones de ajuste rápido (Chips)
   function inicializarChips() {
+    // Chips de Precio Inmueble Delta (-10k, +10k)
+    document.querySelectorAll('[data-chip-precio-delta]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delta = parseFloat(btn.getAttribute('data-chip-precio-delta')) || 0;
+        const actual = parseFloat(inputPrecioInmueble?.value) || 0;
+        const nuevo = Math.max(10000, actual + delta);
+        if (inputPrecioInmueble) inputPrecioInmueble.value = nuevo;
+        calcularYActualizar();
+      });
+    });
+
+    // Chips de Precio Inmueble Fijo (150k, 200k, 250k, 300k, 400k)
+    document.querySelectorAll('[data-chip-precio-set]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const valor = parseFloat(btn.getAttribute('data-chip-precio-set')) || 0;
+        if (valor > 0) {
+          if (inputPrecioInmueble) inputPrecioInmueble.value = valor;
+          calcularYActualizar();
+        }
+      });
+    });
+
     // Chips de Capital Delta (-10k, +10k)
     document.querySelectorAll('[data-chip-cap-delta]').forEach(btn => {
       btn.addEventListener('click', () => {
